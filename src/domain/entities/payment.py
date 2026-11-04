@@ -1,8 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
+from src.domain.exceptions import InvalidPaymentError
 from src.domain.value_objects.payment_objects import Currency, PaymentStatus
 
 
@@ -12,13 +13,20 @@ class Payment:
     amount: Decimal
     currency: Currency
     description: str
-    metadata: dict[str, Any] = field(default_factory=dict)
-    status: PaymentStatus = PaymentStatus.PENDING
-    idempotency_key: str | None = None
-    webhook_url: str | None = None
-    created_at: datetime | None = None
-    processed_at: datetime | None = None
-    error_message: str | None = None
+    metadata: dict[str, Any]
+    status: PaymentStatus
+    idempotency_key: str | None
+    webhook_url: str | None
+    created_at: datetime | None
+    processed_at: datetime | None
+    error_message: str | None
+
+    def __post_init__(self) -> None:
+        _validate_payment(
+            amount=self.amount,
+            description=self.description,
+            idempotency_key=self.idempotency_key,
+        )
 
     def mark_as_succeeded(self) -> None:
         self.status = PaymentStatus.SUCCEEDED
@@ -28,17 +36,23 @@ class Payment:
         self.error_message = error_message
 
     def to_payload(self) -> dict[str, Any]:
-        """Возвращает payload для Outbox-события на основе текущего состояния платежа."""
-        payload: dict[str, Any] = {
+        return {
             "payment_id": self.id,
             "amount": str(self.amount),
             "currency": self.currency.value,
             "status": self.status.value,
         }
 
-        if self.processed_at is not None:
-            payload["processed_at"] = self.processed_at.isoformat()
-        if self.error_message is not None:
-            payload["error_message"] = self.error_message
 
-        return payload
+def _validate_payment(
+    *,
+    amount: Decimal,
+    description: str,
+    idempotency_key: str | None,
+) -> None:
+    if amount <= 0:
+        raise InvalidPaymentError("amount must be positive")
+    if not description.strip():
+        raise InvalidPaymentError("description must not be empty")
+    if idempotency_key is not None and not idempotency_key.strip():
+        raise InvalidPaymentError("idempotency_key must not be empty if provided")

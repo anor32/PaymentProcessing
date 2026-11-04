@@ -54,3 +54,14 @@ class ObjectNotFoundError(PermanentError):
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(message, details)
+
+
+class InvalidPaymentError(AppError):
+    """Ошибка валидации платежа (некорректные данные)."""
+
+    def __init__(
+        self,
+        message: str = "Некорректные данные платежа.",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, details)
