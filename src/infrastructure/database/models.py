@@ -1,6 +1,6 @@
-import enum
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 
 from sqlalchemy import DateTime, Enum, Index, Integer, Numeric, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB
@@ -35,16 +35,16 @@ class Payment(Base):
     error_message: Mapped[str | None] = mapped_column(String(500))
 
 
-class OutboxStatus(str, enum.Enum):
-    PENDING = "pending"
-    PUBLISHED = "published"
-    FAILED = "failed"
-
-
-class OutboxEventType(str, enum.Enum):
+class OutboxEventType(StrEnum):
     PAYMENT_CREATED = "payment.created"
     PAYMENT_SUCCEEDED = "payment.succeeded"
     PAYMENT_FAILED = "payment.failed"
+
+
+class OutboxStatus(StrEnum):
+    PENDING = "pending"
+    PUBLISHED = "published"
+    FAILED = "failed"
 
 
 class Outbox(Base):
