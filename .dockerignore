@@ -1,0 +1,43 @@
+# Временные файлы
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+
+# Виртуальное окружение
+.venv/
+venv/
+ENV/
+env/
+
+# IDE и редакторы
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Операционная система (Windows)
+.DS_Store
+Thumbs.db
+
+# Python-specific
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Docker (не нужно включать в образ)
+.docker/
+docker-compose*.yml
+!.dockerignore
