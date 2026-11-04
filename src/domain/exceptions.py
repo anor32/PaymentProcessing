@@ -45,3 +45,12 @@ class IdempotencyError(AppError):
         details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(message, details)
+
+
+class ObjectNotFoundError(PermanentError):
+    def __init__(
+        self,
+        message: str = "Запрашиваемый объект не найден.",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, details)
