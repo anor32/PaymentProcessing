@@ -3,24 +3,21 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.domain.entities.payment import Payment
 from src.domain.value_objects.payment_objects import Currency, PaymentStatus
 
 
 class PaymentCreateDto(BaseModel):
-    """DTO для создания нового платежа."""
-
     amount: Decimal
     currency: Currency
     description: str
-    metadata: dict[str, Any] = {}
+    metadata: dict[str, Any] = Field(default_factory=dict)
     idempotency_key: str | None = None
     webhook_url: str | None = None
 
     def to_entity(self) -> Payment:
-        """Преобразует DTO в доменную сущность Payment."""
         return Payment(
             id=str(uuid4()),
             amount=self.amount,
