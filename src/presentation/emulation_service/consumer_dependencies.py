@@ -1,17 +1,3 @@
-"""Dependencies for the Consumer (emulation gateway) service.
-
-Provides FastAPI-style dependency functions that inject into RabbitConsumer:
-- ConsumerConfig
-- AsyncSession / IUnitOfWork
-- ProcessPaymentUseCase
-- RabbitBroker
-- RabbitConsumer (assembled from injected deps via RabbitConsumerDep)
-
-The Consumer receives all collaborators via Consumer Deps (constructor injection),
-it does NOT create them on its own. A new Unit of Work is created for every
-message via the injected create_uow factory.
-"""
-
 from collections.abc import AsyncGenerator, Callable
 from typing import Annotated
 
@@ -36,31 +22,15 @@ async def get_session() -> AsyncGenerator[AsyncSession]:
         yield session
 
 
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-
-
 def get_uow(session: SessionDep) -> IUnitOfWork:
     return SQLAlchemyUnitOfWork(session)
 
 
-UowDep = Annotated[IUnitOfWork, Depends(get_uow)]
-
-
 def get_consumer_config() -> ConsumerConfig:
-    """Provides ConsumerConfig (broker topology, retries, backoff)."""
     return ConsumerConfig()
 
 
-ConsumerConfigDep = Annotated[ConsumerConfig, Depends(get_consumer_config)]
-
-
 def create_uow_consumer(session_factory: async_sessionmaker) -> Callable[[], IUnitOfWork]:
-    """Factory that creates a new Unit of Work for every consumer message.
-
-    Returns a callable that the RabbitConsumer invokes for each incoming
-    message so a fresh DB session / UoW is used per message.
-    """
-
     def _create_uow() -> IUnitOfWork:
         return SQLAlchemyUnitOfWork(session_factory)
 
@@ -68,7 +38,6 @@ def create_uow_consumer(session_factory: async_sessionmaker) -> Callable[[], IUn
 
 
 def get_process_payment_usecase(uow: UowDep, config: ConsumerConfigDep) -> ProcessPaymentUseCase:
-    """Builds ProcessPaymentUseCase from injected Unit of Work and ConsumerConfig."""
     return ProcessPaymentUseCase(
         uow=uow,
         webhook_sender=HttpWebhookSender(),
@@ -76,11 +45,7 @@ def get_process_payment_usecase(uow: UowDep, config: ConsumerConfigDep) -> Proce
     )
 
 
-ProcessPaymentUseCaseDep = Annotated[ProcessPaymentUseCase, Depends(get_process_payment_usecase)]
-
-
 def get_rabbit_broker() -> RabbitBroker:
-    """Creates a RabbitBroker instance for connecting to RabbitMQ."""
     return RabbitBroker(settings.rabbitmq_url)
 
 
@@ -88,15 +53,10 @@ RabbitBrokerDep = Annotated[RabbitBroker, Depends(get_rabbit_broker)]
 
 
 def get_rabbit_consumer(
-    broker: RabbitBrokerDep,
-    usecase: ProcessPaymentUseCaseDep,
-    config: ConsumerConfigDep,
+        broker: RabbitBrokerDep,
+        usecase: ProcessPaymentUseCaseDep,
+        config: ConsumerConfigDep,
 ) -> RabbitConsumer:
-    """Creates a RabbitConsumer with configured broker, create_uow, usecase, and config.
-
-    All collaborators are injected via Consumer Deps, the consumer itself
-    receives them through constructor injection.
-    """
     return RabbitConsumer(
         broker=broker,
         create_uow=create_uow_consumer(session_factory),
@@ -106,3 +66,7 @@ def get_rabbit_consumer(
 
 
 RabbitConsumerDep = Annotated[RabbitConsumer, Depends(get_rabbit_consumer)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+UowDep = Annotated[IUnitOfWork, Depends(get_uow)]
+ConsumerConfigDep = Annotated[ConsumerConfig, Depends(get_consumer_config)]
+ProcessPaymentUseCaseDep = Annotated[ProcessPaymentUseCase, Depends(get_process_payment_usecase)]
