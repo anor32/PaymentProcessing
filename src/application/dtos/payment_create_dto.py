@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from src.domain.entities.payment import Payment
 from src.domain.value_objects.payment_objects import Currency, PaymentStatus
-from src.presentation.schemas.payment_create_request import PaymentCreateRequest
+from src.presentation.schemas.payment_schemas import PaymentCreateRequest
 
 
 class PaymentCreateDto(BaseModel):
