@@ -6,30 +6,53 @@ readme = "README.md"
 
 requires-python = ">=3.14"
 dependencies = [
+    "aio_pika>=9.2.2",
     "alembic>=1.20.1",
     "asyncpg>=0.32.0",
     "fastapi[standard]>=0.162.0",
+    "faststream[rabbit]>=0.3.0",
     "httpx>=0.28.1",
-    "pika>=1.4.4",
     "pre-commit>=4.7.0",
     "pydantic-settings>=2.16.2",
     "pydantic[standard]>=2.14.2",
     "ruff>=0.17.3",
     "sqlalchemy[asyncio]>=2.1.8",
 ]
-
-[project.scripts]
-paymentprocessing = "paymentprocessing:main"
-
-[build-system]
-requires = ["uv_build>=0.13.7,<0.14.0"]
-build-backend = "uv_build"
-
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.2",
     "ruff>=0.16.10",
+    "mypy>=1.11.0",
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1.post1",
+    "aiosqlite>=0.22.1",
 ]
+
+[tool.mypy]
+python_version = "3.14"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+follow_imports = "normal"
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "sqlalchemy.*",
+    "alembic.*",
+    "fastapi.*",
+    "faststream.*",
+    "pydantic.*",
+    "pydantic_settings.*",
+    "aio_pika.*",
+    "asyncpg.*",
+    "httpx.*",
+    "uvicorn.*",
+]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100
@@ -45,3 +68,8 @@ ignore = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
