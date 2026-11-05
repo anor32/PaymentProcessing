@@ -154,8 +154,9 @@ class RabbitConsumer:
 
         logger.info("Consumer started, waiting for messages on %s...", self._queue_name)
 
+        stop_event = asyncio.Event()
         try:
-            await asyncio.Future()
+            await stop_event.wait()
         except asyncio.CancelledError:
             pass
         finally:
