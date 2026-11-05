@@ -8,15 +8,12 @@ from src.infrastructure.database.models import OutboxEventType
 
 @dataclass
 class OutboxEventDto:
-    """DTO for Outbox event."""
-
     id: str | None = None
     event_type: OutboxEventType | None = None
     payload: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def entity_to_dto(cls, payment: Payment) -> OutboxEventDto:
-        """Converts Payment entity to Outbox event DTO."""
         event_type = OutboxEventType.PAYMENT_CREATED
         if payment.status == PaymentStatus.SUCCEEDED:
             event_type = OutboxEventType.PAYMENT_SUCCEEDED

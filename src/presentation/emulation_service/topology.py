@@ -33,7 +33,6 @@ async def setup_topology(config: ConsumerConfig | None = None) -> None:
             )
             logger.info("Created retry queue %s (ttl=%sms)", queue_name, ttl)
 
-        # Main queue with DLX arguments (rejected messages go to DLQ)
         await broker.declare_queue(
             RabbitQueue(config.queue_name, durable=True, arguments=config.main_queue_arguments)
         )

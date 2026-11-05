@@ -7,8 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class PublishOutboxEventsUseCase:
-    """Orchestrates reading pending events from DB and publishing to RabbitMQ."""
-
     def __init__(
         self,
         uow: IUnitOfWork,
@@ -22,7 +20,6 @@ class PublishOutboxEventsUseCase:
         self._batch_size = batch_size
 
     async def execute(self) -> None:
-        """Runs one publish cycle: read pending, publish, mark status."""
         outbox_repo: IOutboxRepository = self._uow.outbox
         events = await outbox_repo.get_pending_events(limit=self._batch_size)
 

@@ -1,5 +1,3 @@
-"""Результат выполнения ProcessPaymentUseCase."""
-
 from dataclasses import dataclass
 from enum import StrEnum
 

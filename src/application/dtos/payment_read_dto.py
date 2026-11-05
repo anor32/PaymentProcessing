@@ -8,8 +8,6 @@ from src.domain.value_objects.payment_objects import Currency, PaymentStatus
 
 
 class PaymentReadDto(BaseModel):
-    """DTO для чтения данных платежа."""
-
     id: str
     amount: Decimal
     currency: Currency

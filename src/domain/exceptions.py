@@ -57,8 +57,6 @@ class ObjectNotFoundError(PermanentError):
 
 
 class InvalidPaymentError(AppError):
-    """Ошибка валидации платежа (некорректные данные)."""
-
     def __init__(
         self,
         message: str = "Некорректные данные платежа.",

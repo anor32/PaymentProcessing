@@ -17,7 +17,6 @@ async def create_payment(
     usecase: CreatePaymentDep,
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
 ) -> PaymentResponse:
-    """Creates a new payment."""
     create_dto = PaymentCreateDto.from_request(request, idempotency_key)
     payment = await usecase.execute(create_dto)
     return PaymentResponse(**asdict(payment))
