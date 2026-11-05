@@ -24,6 +24,7 @@ class OutboxPublisherWorker:
                 await self._usecase.execute()
             except Exception:
                 logger.exception("Outbox publish cycle failed")
+                raise
             await asyncio.sleep(self._interval)
         logger.info("OutboxPublisherWorker stopped")
 
