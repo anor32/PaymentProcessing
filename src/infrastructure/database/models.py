@@ -1,12 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
+from uuid import uuid4
 
 from sqlalchemy import DateTime, Enum, Index, Integer, Numeric, String, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from domain.value_objects.payment_objects import Currency, PaymentStatus
+from src.domain.value_objects.payment_objects import Currency, PaymentStatus
 
 
 class Base(DeclarativeBase):
@@ -28,7 +29,7 @@ class Payment(Base):
     )
 
     idempotency_key: Mapped[str] = mapped_column(String(36), unique=True, index=True)
-    webhook_url: Mapped[str] = mapped_column(String(1000))
+    webhook_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -50,7 +51,7 @@ class OutboxStatus(StrEnum):
 class Outbox(Base):
     __tablename__ = "outbox"
 
-    (
+    __table_args__ = (
         Index(
             "ix_outbox_published_at_not_null",
             "published_at",
@@ -58,7 +59,7 @@ class Outbox(Base):
         ),
     )
 
-    id: Mapped[str] = mapped_column(primary_key=True, default=func.gen_random_uuid())
+    id: Mapped[str] = mapped_column(primary_key=True, default=lambda: str(uuid4()))
     event_type: Mapped[OutboxEventType]
     payload: Mapped[dict] = mapped_column(JSONB)
 
