@@ -1,5 +1,5 @@
-from domain.entities.payment import Payment
-from domain.exceptions import ObjectNotFoundError
+from src.domain.entities.payment import Payment
+from src.domain.exceptions import ObjectNotFoundError
 from src.domain.interfaces.unit_of_work import IUnitOfWork
 
 
