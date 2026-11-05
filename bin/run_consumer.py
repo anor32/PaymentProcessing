@@ -1,32 +1,28 @@
 import asyncio
-import logging
 
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
-from src.config import settings
+from src.application.usecases.process_payment import ProcessPaymentUseCase
 from src.infrastructure.webhook.http_webhook_sender import HttpWebhookSender
-from src.presentation.consumer import QUEUE_NAME, RabbitConsumer
-
-logger = logging.getLogger(__name__)
+from src.presentation.emulation_service.consumer_dependencies import (
+    get_consumer_config,
+    get_rabbit_broker,
+    get_rabbit_consumer,
+)
+from src.presentation.emulation_service.topology import setup_topology
 
 
 async def main() -> None:
-    engine = create_async_engine(settings.POSTGRES_CONNECTION_STRING)
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    config = get_consumer_config()
 
-    webhook_sender = HttpWebhookSender()
+    await setup_topology(config=config)
 
-    consumer = RabbitConsumer(
-        rabbitmq_url=settings.rabbitmq_url,
-        queue_name=QUEUE_NAME,
-        session_factory=session_factory,
-        webhook_sender=webhook_sender,
+    broker = get_rabbit_broker()
+    usecase = ProcessPaymentUseCase(
+        webhook_sender=HttpWebhookSender(),
+        max_retries=config.max_retries,
     )
+    consumer = get_rabbit_consumer(broker=broker, usecase=usecase, config=config)
 
-    try:
-        await consumer.consume()
-    finally:
-        await engine.dispose()
+    await consumer.run()
 
 
 if __name__ == "__main__":
