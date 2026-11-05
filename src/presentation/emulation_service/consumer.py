@@ -1,27 +1,3 @@
-"""Consumer for payment processing in the isolated emulation_service folder.
-
-The RabbitConsumer class receives ALL dependencies via __init__ (constructor injection):
-- broker (RabbitBroker)
-- create_uow (Callable[[], IUnitOfWork]) - factory that creates a new Unit of Work
-  for every incoming message
-- usecase (ProcessPaymentUseCase)
-- config (ConsumerConfig)
-
-Each message = new DB session via Unit of Work.
-Retry counter is read from RabbitMQ x-death headers.
-
-Consumer responsibilities (presentation layer):
-- accept the incoming message and transform it into the internal format
-- delegate processing to ProcessPaymentUseCase
-- route by PaymentProcessingResult action:
-    - SUCCESS -> message handled, broker confirms (acks)
-    - RETRY -> retry via retry() with exponential backoff -> retry queue
-    - DLQ -> send to Dead Letter Queue
-
-Dependencies are NOT created here - they are injected via Consumer Deps
-(see consumer_dependencies module). The consumer only holds injected instances.
-"""
-
 import asyncio
 import logging
 from collections.abc import Callable
@@ -112,7 +88,6 @@ class RabbitConsumer:
         return next_retry
 
     def _transform_message(self, body: dict) -> dict:
-        """Transform the incoming RabbitMQ / Outbox message into the internal format."""
         message_body: dict = dict(body or {})
         payload = message_body.get("payload")
         if isinstance(payload, dict):
@@ -163,9 +138,6 @@ class RabbitConsumer:
                 await self._send_dlq(message_body, result.error_message or "unknown error")
 
     async def run(self) -> None:
-        """Run the infinite message reading loop."""
-        await self._broker.start()
-
         queue = RabbitQueue(
             self._queue_name,
             durable=True,
@@ -173,10 +145,11 @@ class RabbitConsumer:
         )
 
         async def handler(body: dict, message) -> None:
-            """Handler for messages from the payments.new queue."""
             await self.consume(body, message)
 
-        await self._broker.subscriber(queue)(handler)
+        self._broker.subscriber(queue)(handler)
+
+        await self._broker.start()
 
         logger.info("Consumer started, waiting for messages on %s...", self._queue_name)
 
