@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from src.application.usecases import PublishOutboxEventsUseCase
 from src.config import settings
 from src.infrastructure.database.db import engine
+from src.infrastructure.database.uow import SQLAlchemyUnitOfWork
 from src.infrastructure.rabbitmq.publisher import RabbitMQPublisher
 from src.presentation.dependencies import session_factory
 from src.presentation.routes import router
@@ -17,8 +18,9 @@ async def lifespan(app: FastAPI):
     publisher = RabbitMQPublisher(settings.rabbitmq_url)
     await publisher.start()
 
+    uow = SQLAlchemyUnitOfWork(session_factory)
     publish_outbox_usecase = PublishOutboxEventsUseCase(
-        session_factory=session_factory,
+        uow=uow,
         publisher=publisher,
         queue_name="payments.new",
         batch_size=10,
