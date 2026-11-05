@@ -16,6 +16,7 @@ from src.domain.entities.payment import Payment
 from src.domain.interfaces.payment_repository import IPaymentRepository
 from src.domain.interfaces.webhook_sender import IWebhookSender
 from src.presentation.dependencies import get_create_payment_usecase, get_get_payment_usecase
+from src.presentation.emulation_service.config import ConsumerConfig
 from src.presentation.main import app
 from tests.fakes import FakeUnitOfWork
 from tests.test_data import (
@@ -106,8 +107,6 @@ def outbox_uow() -> FakeUnitOfWork:
 
 @pytest.fixture
 def consumer_config() -> Any:
-    from src.presentation.emulation_service.config import ConsumerConfig
-
     return ConsumerConfig()
 
 

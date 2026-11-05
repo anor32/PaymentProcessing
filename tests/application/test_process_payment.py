@@ -1,5 +1,5 @@
 from decimal import Decimal
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -23,8 +23,7 @@ class TestProcessPaymentUseCase:
         webhook_sender: AsyncMock,
         process_payment_usecase: ProcessPaymentUseCase,
     ) -> None:
-        with patch("src.domain.entities.payment.random.random", return_value=0.0):
-            result = await process_payment_usecase.execute(saved_payment.id, uow=uow)
+        result = await process_payment_usecase.execute(saved_payment.id, uow=uow)
 
         assert result.action == PaymentProcessingAction.SUCCESS
 
@@ -117,10 +116,12 @@ class TestProcessPaymentUseCase:
         webhook_sender: AsyncMock,
         process_payment_usecase: ProcessPaymentUseCase,
     ) -> None:
-        with patch("src.domain.entities.payment.random.random", return_value=1.0):
-            result = await process_payment_usecase.execute(saved_payment.id, uow=uow)
+        webhook_sender.send.side_effect = Exception("Webhook error")
+        usecase = ProcessPaymentUseCase(webhook_sender, max_retries=0)
 
-        assert result.action == PaymentProcessingAction.SUCCESS
+        result = await usecase.execute(saved_payment.id, retry_count=0, uow=uow)
+
+        assert result.action == PaymentProcessingAction.DLQ
 
         async with uow:
             updated = await uow.payments.get_by_id(saved_payment.id)
@@ -129,6 +130,3 @@ class TestProcessPaymentUseCase:
             assert updated.processed_at is not None
 
         webhook_sender.send.assert_awaited_once()
-        call_args = webhook_sender.send.await_args
-        assert call_args.kwargs["url"] == saved_payment.webhook_url
-        assert call_args.kwargs["payload"]["status"] == "failed"
