@@ -1,11 +1,3 @@
-"""init db
-
-Revision ID: c40b571d0160
-Revises:
-Create Date: 2026-11-04 15:38:31.412083
-
-"""
-
 from collections.abc import Sequence
 from typing import Union
 
