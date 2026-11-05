@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from src.application.dtos.payment_create_dto import PaymentCreateDto
+from src.domain.exceptions import ObjectNotFoundError
 from src.presentation.dependencies import CreatePaymentDep, GetPaymentDep, get_api_key
 from src.presentation.schemas.payment_schemas import PaymentCreateRequest, PaymentResponse
 
@@ -18,7 +19,13 @@ async def create_payment(
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
 ) -> PaymentResponse:
     create_dto = PaymentCreateDto.from_request(request, idempotency_key)
-    payment = await usecase.execute(create_dto)
+    try:
+        payment = await usecase.execute(create_dto)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="internal Server Error"
+        ) from e
+
     return PaymentResponse(**asdict(payment))
 
 
@@ -28,7 +35,12 @@ async def get_payment(
     api_key: Annotated[str, Depends(get_api_key)],
     usecase: GetPaymentDep,
 ) -> PaymentResponse:
-    payment = await usecase.execute(payment_id)
+    try:
+        payment = await usecase.execute(payment_id)
+    except ObjectNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found"
+        ) from None
 
     if payment is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment not found")
