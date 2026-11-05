@@ -20,11 +20,7 @@ class OutboxPublisherWorker:
     async def _run(self) -> None:
         logger.info("OutboxPublisherWorker started (interval=%ss)", self._interval)
         while not self._stop.is_set():
-            try:
-                await self._usecase.execute()
-            except Exception:
-                logger.exception("Outbox publish cycle failed")
-                raise
+            await self._usecase.execute()
             await asyncio.sleep(self._interval)
         logger.info("OutboxPublisherWorker stopped")
 
