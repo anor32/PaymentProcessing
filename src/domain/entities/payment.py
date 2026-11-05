@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -13,13 +13,13 @@ class Payment:
     amount: Decimal
     currency: Currency
     description: str
-    metadata: dict[str, Any]
-    status: PaymentStatus
-    idempotency_key: str | None
-    webhook_url: str | None
-    created_at: datetime | None
-    processed_at: datetime | None
-    error_message: str | None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    status: PaymentStatus = PaymentStatus.PENDING
+    idempotency_key: str | None = None
+    webhook_url: str | None = None
+    created_at: datetime | None = None
+    processed_at: datetime | None = None
+    error_message: str | None = None
 
     def __post_init__(self) -> None:
         _validate_payment(
