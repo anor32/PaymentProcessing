@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     RABBITMQ_USER: str = "guest"
     RABBITMQ_PASSWORD: str = "guest"
     RABBITMQ_VHOST: str = "/"
+    API_KEY: str = "secret-api-key"
 
     @field_validator("POSTGRES_CONNECTION_STRING", mode="before")
     @classmethod
