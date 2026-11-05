@@ -5,13 +5,9 @@ from fastapi import Depends, HTTPException
 from fastapi.security import APIKeyHeader
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from src.application.usecases import (
-    CreatePaymentUseCase,
-    GetPaymentUseCase,
-    PublishOutboxEventsUseCase,
-)
+from src.application.usecases import CreatePaymentUseCase, GetPaymentUseCase
 from src.config import settings
-from src.domain.interfaces import IMessagePublisher, IUnitOfWork
+from src.domain.interfaces import IUnitOfWork
 from src.infrastructure.database.db import engine
 from src.infrastructure.database.uow import SQLAlchemyUnitOfWork
 
@@ -27,7 +23,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 def get_uow(session: SessionDep) -> IUnitOfWork:
-    return SQLAlchemyUnitOfWork(session)
+    return SQLAlchemyUnitOfWork(session_factory)
 
 
 UowDep = Annotated[IUnitOfWork, Depends(get_uow)]
@@ -39,15 +35,6 @@ def get_create_payment_usecase(uow: UowDep) -> CreatePaymentUseCase:
 
 def get_get_payment_usecase(uow: UowDep) -> GetPaymentUseCase:
     return GetPaymentUseCase(uow)
-
-
-def get_publish_use_case(publisher: IMessagePublisher) -> PublishOutboxEventsUseCase:
-    return PublishOutboxEventsUseCase(
-        session_factory=session_factory,
-        publisher=publisher,
-        queue_name="payments.new",
-        batch_size=10,
-    )
 
 
 CreatePaymentDep = Annotated[CreatePaymentUseCase, Depends(get_create_payment_usecase)]

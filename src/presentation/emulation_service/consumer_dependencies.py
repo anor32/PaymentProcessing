@@ -1,4 +1,4 @@
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import Callable
 from typing import Annotated
 
 from fastapi import Depends
@@ -8,21 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from src.application.usecases.process_payment import ProcessPaymentUseCase
 from src.config import settings
 from src.domain.interfaces import IUnitOfWork
-from src.infrastructure.database.db import engine
 from src.infrastructure.database.uow import SQLAlchemyUnitOfWork
 from src.infrastructure.webhook.http_webhook_sender import HttpWebhookSender
+from src.presentation.dependencies import UowDep, session_factory
 from src.presentation.emulation_service.config import ConsumerConfig
 from src.presentation.emulation_service.consumer import RabbitConsumer
-
-session_factory = async_sessionmaker(engine, expire_on_commit=False)
-
-
-async def get_session() -> AsyncGenerator[AsyncSession]:
-    async with session_factory() as session:
-        yield session
-
-
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 def get_consumer_config() -> ConsumerConfig:
@@ -32,16 +22,16 @@ def get_consumer_config() -> ConsumerConfig:
 ConsumerConfigDep = Annotated[ConsumerConfig, Depends(get_consumer_config)]
 
 
-def get_uow(session: SessionDep) -> IUnitOfWork:
-    return SQLAlchemyUnitOfWork(session)
+def get_rabbit_broker() -> RabbitBroker:
+    return RabbitBroker(settings.rabbitmq_url)
 
 
-UowDep = Annotated[IUnitOfWork, Depends(get_uow)]
+RabbitBrokerDep = Annotated[RabbitBroker, Depends(get_rabbit_broker)]
 
 
-def create_uow_consumer(session_factory: async_sessionmaker) -> Callable[[], IUnitOfWork]:
+def create_uow_consumer(factory: async_sessionmaker[AsyncSession]) -> Callable[[], IUnitOfWork]:
     def _create_uow() -> IUnitOfWork:
-        return SQLAlchemyUnitOfWork(session_factory)
+        return SQLAlchemyUnitOfWork(factory)
 
     return _create_uow
 
@@ -57,13 +47,6 @@ def get_process_payment_usecase(uow: UowDep, config: ConsumerConfigDep) -> Proce
 ProcessPaymentUseCaseDep = Annotated[ProcessPaymentUseCase, Depends(get_process_payment_usecase)]
 
 
-def get_rabbit_broker() -> RabbitBroker:
-    return RabbitBroker(settings.rabbitmq_url)
-
-
-RabbitBrokerDep = Annotated[RabbitBroker, Depends(get_rabbit_broker)]
-
-
 def get_rabbit_consumer(
     broker: RabbitBrokerDep,
     usecase: ProcessPaymentUseCaseDep,
@@ -75,6 +58,3 @@ def get_rabbit_consumer(
         usecase=usecase,
         config=config,
     )
-
-
-RabbitConsumerDep = Annotated[RabbitConsumer, Depends(get_rabbit_consumer)]
