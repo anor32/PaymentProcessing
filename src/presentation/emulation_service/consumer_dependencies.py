@@ -22,12 +22,21 @@ async def get_session() -> AsyncGenerator[AsyncSession]:
         yield session
 
 
-def get_uow(session: SessionDep) -> IUnitOfWork:
-    return SQLAlchemyUnitOfWork(session)
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 def get_consumer_config() -> ConsumerConfig:
     return ConsumerConfig()
+
+
+ConsumerConfigDep = Annotated[ConsumerConfig, Depends(get_consumer_config)]
+
+
+def get_uow(session: SessionDep) -> IUnitOfWork:
+    return SQLAlchemyUnitOfWork(session)
+
+
+UowDep = Annotated[IUnitOfWork, Depends(get_uow)]
 
 
 def create_uow_consumer(session_factory: async_sessionmaker) -> Callable[[], IUnitOfWork]:
@@ -45,6 +54,9 @@ def get_process_payment_usecase(uow: UowDep, config: ConsumerConfigDep) -> Proce
     )
 
 
+ProcessPaymentUseCaseDep = Annotated[ProcessPaymentUseCase, Depends(get_process_payment_usecase)]
+
+
 def get_rabbit_broker() -> RabbitBroker:
     return RabbitBroker(settings.rabbitmq_url)
 
@@ -53,9 +65,9 @@ RabbitBrokerDep = Annotated[RabbitBroker, Depends(get_rabbit_broker)]
 
 
 def get_rabbit_consumer(
-        broker: RabbitBrokerDep,
-        usecase: ProcessPaymentUseCaseDep,
-        config: ConsumerConfigDep,
+    broker: RabbitBrokerDep,
+    usecase: ProcessPaymentUseCaseDep,
+    config: ConsumerConfigDep,
 ) -> RabbitConsumer:
     return RabbitConsumer(
         broker=broker,
@@ -66,7 +78,3 @@ def get_rabbit_consumer(
 
 
 RabbitConsumerDep = Annotated[RabbitConsumer, Depends(get_rabbit_consumer)]
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
-UowDep = Annotated[IUnitOfWork, Depends(get_uow)]
-ConsumerConfigDep = Annotated[ConsumerConfig, Depends(get_consumer_config)]
-ProcessPaymentUseCaseDep = Annotated[ProcessPaymentUseCase, Depends(get_process_payment_usecase)]
