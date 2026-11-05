@@ -47,14 +47,14 @@ class ProcessPaymentUseCase:
             logger.info("Processing payment %s...", payment_id)
             await asyncio.sleep(1)
 
-            payment.process()
+            payment.mark_as_succeeded()
             logger.info("Payment %s -> %s", payment_id, payment.status.value)
 
             await uow.payments.update(payment)
 
             if payment.webhook_url:
                 try:
-                    payload = payment.to_webhook_payload()
+                    payload = payment.to_payload()
 
                     await self._webhook_sender.send(
                         url=payment.webhook_url,
@@ -63,6 +63,8 @@ class ProcessPaymentUseCase:
                     logger.info("Webhook sent for payment %s", payment_id)
                 except Exception as exc:
                     logger.exception("Webhook failed for payment %s: %s", payment_id, exc)
+                    payment.mark_as_failed(error_message=str(exc))
+                    await uow.payments.update(payment)
 
                     if retry_count >= self._max_retries:
                         return PaymentProcessingResult(

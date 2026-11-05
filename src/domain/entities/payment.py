@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -30,10 +30,12 @@ class Payment:
 
     def mark_as_succeeded(self) -> None:
         self.status = PaymentStatus.SUCCEEDED
+        self.processed_at = datetime.now(UTC)
 
     def mark_as_failed(self, error_message: str | None = None) -> None:
         self.status = PaymentStatus.FAILED
         self.error_message = error_message
+        self.processed_at = datetime.now(UTC)
 
     def to_payload(self) -> dict[str, Any]:
         return {
@@ -41,6 +43,7 @@ class Payment:
             "amount": str(self.amount),
             "currency": self.currency.value,
             "status": self.status.value,
+            "processed_at": self.processed_at.isoformat() if self.processed_at else None,
         }
 
 
