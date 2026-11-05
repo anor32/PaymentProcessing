@@ -26,7 +26,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
 def get_consumer_config() -> ConsumerConfig:
-    return ConsumerConfig()
+    return ConsumerConfig(rabbitmq_url=settings.rabbitmq_url)
 
 
 ConsumerConfigDep = Annotated[ConsumerConfig, Depends(get_consumer_config)]
