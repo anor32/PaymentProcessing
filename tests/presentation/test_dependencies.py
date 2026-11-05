@@ -1,5 +1,4 @@
 import inspect
-from unittest.mock import MagicMock
 
 from src.domain.interfaces.unit_of_work import IUnitOfWork
 from src.infrastructure.database.uow import SQLAlchemyUnitOfWork
@@ -14,8 +13,7 @@ class TestDependencies:
     def test_get_uow_returns_iunitofwork(self) -> None:
         from src.presentation.dependencies import get_uow
 
-        mock_session = MagicMock()
-        result = get_uow(mock_session)
+        result = get_uow()
 
         assert isinstance(result, SQLAlchemyUnitOfWork)
         assert isinstance(result, IUnitOfWork)
