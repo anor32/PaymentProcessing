@@ -25,8 +25,8 @@ class Settings(BaseSettings):
             v = re.sub(r"^postgres(?:ql)?://", "postgresql+asyncpg://", v)
         return v
 
-    @computed_field
     @property
+    @computed_field
     def rabbitmq_url(self) -> str:
         vhost = self.RABBITMQ_VHOST
         if vhost == "/":

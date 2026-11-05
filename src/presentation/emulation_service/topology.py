@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Any, cast
 
 from faststream.rabbit import RabbitBroker, RabbitQueue
 
@@ -34,7 +35,11 @@ async def setup_topology(config: ConsumerConfig | None = None) -> None:
             logger.info("Created retry queue %s (ttl=%sms)", queue_name, ttl)
 
         await broker.declare_queue(
-            RabbitQueue(config.queue_name, durable=True, arguments=config.main_queue_arguments)
+            RabbitQueue(
+                config.queue_name,
+                durable=True,
+                arguments=cast(Any, config.main_queue_arguments),
+            )
         )
         logger.info("Created main queue %s", config.queue_name)
 

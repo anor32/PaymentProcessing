@@ -5,14 +5,14 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.interfaces.outbox_repository import IOutboxRepository
-from src.infrastructure.database.models import Outbox, OutboxEventType, OutboxStatus
+from src.infrastructure.database.models import Outbox, OutboxStatus
 
 
 class SQLAlchemyOutboxRepository(IOutboxRepository):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def add_event(self, event_type: OutboxEventType, payload: dict[str, Any]) -> None:
+    async def add_event(self, event_type: str, payload: dict[str, Any]) -> None:
         self._session.add(
             Outbox(
                 event_type=event_type,

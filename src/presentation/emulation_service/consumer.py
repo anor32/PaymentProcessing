@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from collections.abc import Callable
+from typing import Any, cast
 
 from faststream.rabbit import RabbitBroker, RabbitQueue
 
@@ -141,7 +142,7 @@ class RabbitConsumer:
         queue = RabbitQueue(
             self._queue_name,
             durable=True,
-            arguments=self._config.main_queue_arguments,
+            arguments=cast(Any, self._config.main_queue_arguments),
         )
 
         async def handler(body: dict, message) -> None:
