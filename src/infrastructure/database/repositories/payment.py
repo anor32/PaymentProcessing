@@ -1,5 +1,6 @@
 from dataclasses import fields
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities.payment import Payment
@@ -27,6 +28,13 @@ class SQLAlchemyPaymentRepository(IPaymentRepository):
             error_message=model.error_message,
         )
 
+    async def _get_idempotency_key(self, payment: Payment) -> PaymentModel | None:
+        if payment.idempotency_key is None:
+            return None
+        stmt = select(PaymentModel).where(PaymentModel.idempotency_key == payment.idempotency_key)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def get_by_id(self, payment_id: str) -> Payment | None:
         model = await self._session.get(PaymentModel, payment_id)
         if model is None:
@@ -34,6 +42,10 @@ class SQLAlchemyPaymentRepository(IPaymentRepository):
         return self._model_to_entity(model)
 
     async def create(self, payment: Payment) -> Payment:
+        existing = await self._get_idempotency_key(payment)
+        if existing is not None:
+            return self._model_to_entity(existing)
+
         model = PaymentModel(
             id=payment.id,
             amount=payment.amount,

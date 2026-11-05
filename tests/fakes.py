@@ -15,13 +15,18 @@ class FakePaymentRepository(IPaymentRepository):
     async def get_by_id(self, payment_id: str) -> Payment | None:
         return self._payments.get(payment_id)
 
+    async def _get_idempotency_key(self, payment: Payment) -> Payment | None:
+        if payment.idempotency_key is None:
+            return None
+        existing_id = self._idempotency_index.get(payment.idempotency_key)
+        if existing_id is None:
+            return None
+        return self._payments.get(existing_id)
+
     async def create(self, payment: Payment) -> Payment:
-        if (
-            payment.idempotency_key is not None
-            and payment.idempotency_key in self._idempotency_index
-        ):
-            existing_id = self._idempotency_index[payment.idempotency_key]
-            return self._payments[existing_id]
+        existing = await self._get_idempotency_key(payment)
+        if existing is not None:
+            return existing
 
         self._payments[payment.id] = payment
         if payment.idempotency_key is not None:

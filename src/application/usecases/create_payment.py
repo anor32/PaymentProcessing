@@ -12,9 +12,10 @@ class CreatePaymentUseCase:
 
         async with self._uow:
             created = await self._uow.payments.create(payment)
-            await self._uow.outbox.add_event(
-                event_type="payment.created",
-                payload=payment.to_payload(),
-            )
+            if created.id == payment.id:
+                await self._uow.outbox.add_event(
+                    event_type="payment.created",
+                    payload=created.to_payload(),
+                )
 
         return created
