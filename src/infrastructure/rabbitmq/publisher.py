@@ -27,5 +27,5 @@ class RabbitMQPublisher(IMessagePublisher):
     async def publish(self, message: dict[str, Any], queue_name: str) -> None:
         if self._broker is None:
             raise RuntimeError("RabbitMQPublisher is not started")
-        await self._broker.publish(message, queue=queue_name)
-        logger.debug("Published to %s: %s", queue_name, message)
+        await self._broker.publish(message, queue=queue_name, persist=True)
+        logger.info("Published persistent message to %s", queue_name)
