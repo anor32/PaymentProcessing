@@ -16,14 +16,14 @@ from src.presentation.emulation_service.consumer import RabbitConsumer
 
 
 def get_consumer_config() -> ConsumerConfig:
-    return ConsumerConfig(rabbitmq_url=settings.rabbitmq_url)
+    return ConsumerConfig(rabbitmq_url=str(settings.rabbitmq_url))
 
 
 ConsumerConfigDep = Annotated[ConsumerConfig, Depends(get_consumer_config)]
 
 
 def get_rabbit_broker() -> RabbitBroker:
-    return RabbitBroker(settings.rabbitmq_url)
+    return RabbitBroker(str(settings.rabbitmq_url))
 
 
 RabbitBrokerDep = Annotated[RabbitBroker, Depends(get_rabbit_broker)]
