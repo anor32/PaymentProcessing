@@ -1,7 +1,4 @@
 import inspect
-from unittest.mock import AsyncMock
-
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.interfaces.unit_of_work import IUnitOfWork
 from src.infrastructure.database.uow import SQLAlchemyUnitOfWork
@@ -20,8 +17,7 @@ class TestDependencies:
         assert inspect.isasyncgenfunction(get_session)
 
     def test_get_uow_returns_iunitofwork(self) -> None:
-        session = AsyncMock(spec=AsyncSession)
-        result = get_uow(session)
+        result = get_uow()
 
         assert isinstance(result, SQLAlchemyUnitOfWork)
         assert isinstance(result, IUnitOfWork)
