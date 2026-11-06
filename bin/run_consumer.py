@@ -1,6 +1,4 @@
 import asyncio
-import sys
-from pathlib import Path
 
 from src.application.usecases.process_payment import ProcessPaymentUseCase
 from src.infrastructure.webhook.http_webhook_sender import HttpWebhookSender
@@ -10,10 +8,6 @@ from src.presentation.emulation_service.consumer_dependencies import (
     get_rabbit_consumer,
 )
 from src.presentation.emulation_service.topology import setup_topology
-
-project_root = Path(__file__).resolve().parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
 
 
 async def main() -> None:
