@@ -41,7 +41,11 @@ class SQLAlchemyUnitOfWork(IUnitOfWork):
             self._session = None
 
     async def commit(self) -> None:
+        if self._session is None:
+            raise RuntimeError("Unit of Work session is not initialized")
         await self._session.commit()
 
     async def rollback(self) -> None:
+        if self._session is None:
+            raise RuntimeError("Unit of Work session is not initialized")
         await self._session.rollback()
