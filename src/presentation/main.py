@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Создаёт publisher и Outbox воркер."""
     logger.info("Starting lifespan: RabbitMQPublisher and OutboxPublisherWorker")
-    publisher = RabbitMQPublisher(settings.rabbitmq_url)
+    publisher = RabbitMQPublisher(str(settings.rabbitmq_url))
     await publisher.start()
 
     uow = SQLAlchemyUnitOfWork(session_factory)
@@ -50,7 +50,9 @@ async def lifespan(app: FastAPI):
     logger.info("Lifespan shutdown complete")
 
 
-async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
+async def app_error_handler(_: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, AppError):
+        return JSONResponse(status_code=500, content={"error": "internal error"})
     status_code = 400
     if isinstance(exc, ObjectNotFoundError):
         status_code = 404
@@ -64,7 +66,9 @@ async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
     )
 
 
-async def validation_error_handler(_: Request, exc: ValidationError) -> JSONResponse:
+async def validation_error_handler(_: Request, exc: Exception) -> JSONResponse:
+    if not isinstance(exc, ValidationError):
+        return JSONResponse(status_code=500, content={"error": "internal error"})
     return JSONResponse(
         status_code=422,
         content={"error": "validation error", "details": exc.errors()},
