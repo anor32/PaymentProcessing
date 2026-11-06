@@ -48,6 +48,7 @@ services:
     environment:
       POSTGRES_CONNECTION_STRING: postgresql+asyncpg://postgres:postgres@postgres:5432/payment_processing
       RABBITMQ_HOST: rabbitmq
+      PYTHONPATH: /app
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,6 +65,7 @@ services:
     environment:
       POSTGRES_CONNECTION_STRING: postgresql+asyncpg://postgres:postgres@postgres:5432/payment_processing
       RABBITMQ_HOST: rabbitmq
+      PYTHONPATH: /app
     depends_on:
       postgres:
         condition: service_healthy
