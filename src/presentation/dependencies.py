@@ -22,7 +22,7 @@ async def get_session() -> AsyncGenerator[AsyncSession]:
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 
-def get_uow(session: SessionDep) -> IUnitOfWork:
+def get_uow() -> IUnitOfWork:
     return SQLAlchemyUnitOfWork(session_factory)
 
 
