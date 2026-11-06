@@ -28,6 +28,8 @@ class RabbitConsumer:
         self._queue_name = self._config.queue_name
 
     def _extract_retry_count(self, message) -> int:
+        if message is None:
+            return 0
         try:
             headers = getattr(message, "headers", None) or {}
             x_death = headers.get("x-death", [])
@@ -145,8 +147,8 @@ class RabbitConsumer:
             arguments=cast(Any, self._config.main_queue_arguments),
         )
 
-        async def handler(body: dict, message) -> None:
-            await self.consume(body, message)
+        async def handler(body: dict) -> None:
+            await self.consume(body, None)
 
         self._broker.subscriber(queue)(handler)
 
